@@ -1,20 +1,26 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'local-python-app'
+    }
+
     stages {
-        stage('Clone') {
+        stage('Clone Repository') {
             steps {
                 git 'https://github.com/bimbayola/DevOps_Project.git'
             }
         }
-        stage('Build') {
+
+        stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("bimbayola/DevOps_Project.git")
+                    dockerImage = docker.build("${DOCKER_IMAGE}")
                 }
             }
         }
-        stage('Test') {
+
+        stage('Run Unit Tests') {
             steps {
                 script {
                     dockerImage.inside {
@@ -24,12 +30,35 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+
+        stage('Deploy Application') {
             steps {
                 script {
-                    dockerImage.push()
+                    // Uruchom nowy kontener na serwerze
+                    sh "docker run -d -p 5000:5000 --name myapp ${DOCKER_IMAGE}"
                 }
             }
+        }
+
+        stage('Post-Deployment Tests') {
+            steps {
+                script {
+                    // Przykładowe testy sprawdzające dostępność aplikacji po wdrożeniu
+                    sh 'curl -f http://localhost:5000 || exit 1'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs for details.'
         }
     }
 }
