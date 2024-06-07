@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone Application Repository') {
             steps {
                 git 'https://github.com/bimbayola/DevOps_Project.git'
             }
